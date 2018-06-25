@@ -1,4 +1,3 @@
-package com.qainfotech.tap.training.snl.api;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -15,23 +14,20 @@ import org.testng.annotations.Test;
 
 public class ExtraTest {
 	Board br;
-	GameInProgressException gipe;
-	InvalidTurnException itc;
-	
-	MaxPlayersReachedExeption mpre;
-	NoUserWithSuchUUIDException nuwsue;
-	PlayerExistsException existplayer;
-	JSONObject newPlayer;
-	public ExtraTest()
+	 JSONObject data;
+	 UUID uid;
+	public ExtraTest() throws IOException
 	{
-		
+		// 
 	}
 
 	@BeforeClass
 	public void oneTimeSetUp() throws FileNotFoundException, UnsupportedEncodingException, IOException {
 		
 		br = new Board();
-		
+		 uid=UUID.randomUUID();
+		  BoardModel.init(uid);
+	        data = BoardModel.data(uid);
 		
 	}
 //game started
@@ -57,37 +53,54 @@ public class ExtraTest {
 	}
 	
 		
-		@Test (priority=1)
-		public void delete_player_with_uuid() {
-			UUID uid=null;//
-			uid = UUID.randomUUID();
+		@Test 
+		public void delete_player_with_uuid() throws FileNotFoundException, UnsupportedEncodingException, NoUserWithSuchUUIDException, PlayerExistsException, GameInProgressException, MaxPlayersReachedExeption, IOException {
+			
 			String name="Adityaa";
+			
 			try
 			{
-				br.registerPlayer(name);
-				 uid = (UUID) br.getData().getJSONArray("players").getJSONObject(0).get("uuid");
-			System.out.println("uid2"+uid);
-			br.deletePlayer(uid);
+				
+				
+				//JSONArray registered =br.registerPlayer(name);
+				
+				
+				JSONArray registered =br.registerPlayer(name);
+				
+				JSONObject obj= registered.getJSONObject(0);
+				System.out.println("jsonObj Values" +registered);
+				
+				uid = (UUID) br.getData().getJSONArray("players").getJSONObject(0).get("uuid");
+				
+				System.out.println("uid"+uid);
+				
+				br.deletePlayer(uid);
+				//check if deleted
+				br.deletePlayer(uid);
+				
 			}
 			catch (Exception e) {
-			//e.printStackTrace();
-			System.out.println("mmessage  ="+e.getMessage());	
+			
+			System.out.println("message delete  ="+e.getMessage());	
 	            Assert.assertEquals(e.getClass(), new NoUserWithSuchUUIDException(uid.toString()).getClass());
-	        }
+	       
+			}
+			
 
 		
 	
 	}
 		
-		@Test (priority=3)
-		public void delete_player_without_register() {
-			UUID uid=null;//
+		@Test (expectedExceptions  = NoUserWithSuchUUIDException.class)
+		public void delete_player_without_register() throws FileNotFoundException, UnsupportedEncodingException, NoUserWithSuchUUIDException {
+			UUID uid=null;
 			uid = UUID.randomUUID();
-			
-			try
+			 br.deletePlayer(uid);
+			 
+			/*try
 			{
-//			
-				// uid = (UUID) br.getData().getJSONArray("players").getJSONObject(0).get("uuid");
+			
+				
 			
 			    br.deletePlayer(uid);
 			}
@@ -96,10 +109,36 @@ public class ExtraTest {
 	            Assert.assertEquals(e.getClass(), new NoUserWithSuchUUIDException(uid.toString()).getClass());
 	        }
 
-		
+		*/
 	
 	}
 		
+		
+		@Test 
+		public void invalid_turn() throws NoUserWithSuchUUIDException, PlayerExistsException, GameInProgressException, MaxPlayersReachedExeption, IOException, InvalidTurnException {
+           String name="Adityaa";
+           UUID uid1=null;;
+           UUID uid2=null;
+			int i=1;
+			try{
+				
+			br.registerPlayer(name +i++);
+			uid1 = (UUID) br.getData().getJSONArray("players").getJSONObject(0).get("uuid");
+			uid2 = (UUID) br.getData().getJSONArray("players").getJSONObject(1).get("uuid");
+			System.out.println(uid1);
+			System.out.println(uid2);
+			br.rollDice(uid1);
+			br.rollDice(uid2);
+			br.rollDice(uid2);
+			
+		}
+		catch (Exception e) {
+            System.out.println("error in turn" +e.getMessage());
+            Assert.assertEquals(e.getClass(), new InvalidTurnException(uid2).getClass());
+        }
+
+
+	}
 		
 	
 }
